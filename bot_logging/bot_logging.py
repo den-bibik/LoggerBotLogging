@@ -4,10 +4,16 @@ import json
 import datetime
 import os
 import psutil
+from bot_logging.threading_queue import send_message, ConsumerThread
 
 
 HOST_CONFIG_PATH = 'host_config.json'
 log_item = namedtuple('log_item', ['level', 'msg', 'datetime'])
+
+def sendMySQL(msg):
+    return True
+
+consumer = ConsumerThread()
 
 class TelegramLogging(Logger):
     def __init__(self, name, process_user_desc,
@@ -39,7 +45,6 @@ class TelegramLogging(Logger):
             assert key in self.host_config, f"No {key} in {HOST_CONFIG_PATH}"
 
         self.last_post_time = datetime.datetime.now()
-        self.cache = []
 
         self.post_worker = self.init_post_worker()
 
@@ -51,7 +56,7 @@ class TelegramLogging(Logger):
     def log(self, level, msg, *args, **kwargs):
         dt = datetime.datetime.now()
         if level  >=  self.post_min_level:
-            self.cache.append(log_item(level=level, msg=msg, datetime=dt))
+            send_message(log_item(level=level, msg=msg, datetime=dt))
         Logger.log(self, level, msg, *args, **kwargs)
 
     def post_cache(self):
