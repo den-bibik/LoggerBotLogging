@@ -65,8 +65,6 @@ class ConsumerThread(Thread):
                     condition.acquire()
                     queue = r + queue
                     condition.release()
-                print(r)
-
 
 
 
@@ -90,4 +88,5 @@ def test():
     ConsumerThread(sendDBfn=sendDBTest).start()
 
 if __name__ == '__main__':
-    test()
+    #test()
+    pass
