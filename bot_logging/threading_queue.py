@@ -25,12 +25,14 @@ class ProducerThread(Thread):
         l = range(70)
         for i in l:
             time.sleep(random.random() * 0.1)
-            send_message(f'{self.name} {i}')
+            send_message(f"{self.name} {i}")
 
 
 class ConsumerThread(Thread):
-    def __init__(self, sendDBfn, max_batch=30, min_batch=10, max_history_len=200,  **kwargs):
-        super(ConsumerThread, self). __init__(**kwargs)
+    def __init__(
+        self, sendDBfn, max_batch=30, min_batch=10, max_history_len=200, **kwargs
+    ):
+        super(ConsumerThread, self).__init__(**kwargs)
         self.sendDB = sendDBfn
         self.MAX_BATCH = max_batch
         self.MIN_BATCH = min_batch
@@ -48,11 +50,11 @@ class ConsumerThread(Thread):
 
             r = None
             if len(queue) > self.MAX_HISTORY_LEN:
-                queue = queue[-self.MAX_HISTORY_LEN:]
+                queue = queue[-self.MAX_HISTORY_LEN :]
 
             if len(queue) > self.MAX_BATCH:
-                r = queue[:self.MAX_BATCH]
-                queue = queue[self.MAX_BATCH:]
+                r = queue[: self.MAX_BATCH]
+                queue = queue[self.MAX_BATCH :]
             elif len(queue) >= self.MIN_BATCH:
                 r = queue
                 queue = []
@@ -60,12 +62,11 @@ class ConsumerThread(Thread):
             condition.release()
 
             if r is not None:
-                if not(self.sendDB(r)):
-                    print('DataBase Error')
+                if not (self.sendDB(r)):
+                    print("DataBase Error")
                     condition.acquire()
                     queue = r + queue
                     condition.release()
-
 
 
 def test():
@@ -87,6 +88,7 @@ def test():
     [ProducerThread(name=str(i)).start() for i in range(10)]
     ConsumerThread(sendDBfn=sendDBTest).start()
 
-if __name__ == '__main__':
-    #test()
+
+if __name__ == "__main__":
+    # test()
     pass
