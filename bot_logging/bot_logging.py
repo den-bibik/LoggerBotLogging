@@ -27,13 +27,7 @@ class TelegramLogger(Logger):
     ):
 
         self.consumer = ConsumerThread(sendDBfn=sender.send)
-        self.consumer.mutex_producer_number.acquire()
-        if self.consumer.first_producer:
-            self.consumer.first_producer = False
-        else:
-            self.consumer.producer_number += 1
-
-        self.consumer.mutex_producer_number.release()
+        self.consumer.add_producer()
 
 
         Logger.__init__(self, "TBL", level, **kwargs)
@@ -79,7 +73,4 @@ class TelegramLogger(Logger):
         return res
 
     def __del__(self):
-        self.consumer.mutex_producer_number.acquire()
-        self.consumer.producer_number -= 1
-        print('self.consumer.producer_number', self.consumer.producer_number)
-        self.consumer.mutex_producer_number.release()
+        self.consumer.del_producer()

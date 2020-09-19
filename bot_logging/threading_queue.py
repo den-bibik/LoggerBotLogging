@@ -52,7 +52,7 @@ class Singleton(type):
 
 class ConsumerThread(Thread, metaclass=Singleton):
     def __init__(
-        self, sendDBfn, max_batch=30, min_batch=10, max_history_len=200, max_time2update=0.1, **kwargs
+        self, sendDBfn, max_batch=30, min_batch=10, max_history_len=200, max_time2update=5.0, **kwargs
     ):
         super(ConsumerThread, self).__init__(**kwargs)
         self.sendDB = sendDBfn
@@ -60,25 +60,41 @@ class ConsumerThread(Thread, metaclass=Singleton):
         self.MIN_BATCH = min_batch
         self.MAX_HISTORY_LEN = max_history_len
         self.MAX_TIME2UPDATE = max_time2update
-        self.producer_number = 1
-        self.first_producer = True
+        self._producer_number = 1
+        self._first_producer = True
         self.mutex_producer_number = threading.Lock()
         self.start()
 
+    def __check_last_producer(self):
+        self.mutex_producer_number.acquire()
+        is_last = self._producer_number <= 0
+        self.mutex_producer_number.release()
+        return is_last
 
+    def add_producer(self):
+        self.mutex_producer_number.acquire()
+        if self._first_producer:
+            self._first_producer = False
+        else:
+            self._producer_number += 1
+        self.mutex_producer_number.release()
+
+    def del_producer(self):
+        self.mutex_producer_number.acquire()
+        self._producer_number -= 1
+        self.mutex_producer_number.release()
 
     def run(self):
         global queue
         previous_iter_empty_queue = True
         last_time_one_added = -1
+        i = 0
         while True:
             condition.acquire()
             if not queue:
                 print("Nothing in queue, consumer is waiting")
-                self.mutex_producer_number.acquire()
-                if self.producer_number <= 0:
+                if self.__check_last_producer():
                     break
-                self.mutex_producer_number.release()
                 condition.wait()
                 print("Producer added something to queue and notified the consumer")
 
@@ -93,13 +109,17 @@ class ConsumerThread(Thread, metaclass=Singleton):
             if len(queue) > self.MAX_HISTORY_LEN:
                 queue = queue[-self.MAX_HISTORY_LEN :]
 
+
             if len(queue) > self.MAX_BATCH:
-                r = queue[: self.MAX_BATCH]
-                queue = queue[self.MAX_BATCH :]
-            elif len(queue) >= self.MIN_BATCH or time2update:
+                r = queue[:self.MAX_BATCH]
+                queue = queue[self.MAX_BATCH:]
+            elif len(queue) >= self.MIN_BATCH or time2update or self.__check_last_producer():
                 r = queue
                 queue = []
 
+
+            time.sleep(0.05)
+            i += 1
             condition.release()
             if r is not None:
                 if not (self.sendDB(r)):

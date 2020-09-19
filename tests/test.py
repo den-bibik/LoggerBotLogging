@@ -3,6 +3,7 @@ from unittest import TestCase
 from bot_logging import TelegramLogger
 from time import time, sleep
 import random
+from threading import Thread
 
 from utils import TestSender
 
@@ -40,4 +41,11 @@ def thread_func(sec_for_test):
 
 class Test(TestCase):
     def test(self):
-        thread_func(2.0)
+        THREAD_NUM = 5
+        threads = []
+        for i in range(THREAD_NUM):
+            x = Thread(target=thread_func, args=(2.0,))
+            x.start()
+            threads.append(x)
+        for thread in threads:
+            thread.join()
