@@ -1,9 +1,9 @@
-from setuptools import setup
+from setuptools import find_packages, setup
 
 setup(
     name='LoggerBotLogging',
     version='0.1',
-    packages=[''],
+    packages=find_packages('.', include=['bot_logging', 'bot_logging.*']),
     url='',
     author='mc-wesban',
     author_email='wesban1@gmail.com',

@@ -4,32 +4,18 @@ import json
 import datetime
 import os
 import psutil
-import requests
-from bot_logging.threading_queue import send_message, ConsumerThread
+
+from .threading_queue import send_message, ConsumerThread
+from .sender import ServerSender
 
 
 HOST_CONFIG_PATH = "host_config.json"
 log_item = namedtuple("log_item", ["level", "msg", "datetime"])
 
 
-class ServerSender:
-    def __init__(self, url, credientals):
-        self.url = url
-
-    def send(self, data):
-        r = requests.post(self.url)
 
 
-class TestSender:
-    def __init__(self):
-        pass
-
-    def send(self, data):
-        print(f"[sender] {data}")
-        return True
-
-
-sender = TestSender()
+sender = ServerSender()
 consumer = ConsumerThread(sendDBfn=sender.send)
 consumer.start()
 
@@ -44,24 +30,25 @@ class TelegramLogger(Logger):
         post_min_time_freq=5.0,
         post_max_size=-1,
         max_cache_size=1000,
+        sender = sender,
         **kwargs
     ):
 
-        Logger.__init__(self, "TBL", level)
-
+        Logger.__init__(self, "TBL", level, **kwargs)
         pid = os.getpid()
         process = psutil.Process(pid)
-        self.info = {
+        self._info = {
             "process_user_desc": process_user_desc,
             "pid": pid,
             "process_name": process.name(),
         }
 
-        self.post_min_level = post_min_level
-        self.post_batch_size = post_batch_size
-        self.post_min_freq = post_min_time_freq
-        self.post_max_size = post_max_size
-        self.max_cache_size = max_cache_size
+        self._post_min_level = post_min_level
+        self._post_batch_size = post_batch_size
+        self._post_min_freq = post_min_time_freq
+        self._post_max_size = post_max_size
+        self._max_cache_size = max_cache_size
+        self._sender = sender
 
         # self.host_config = json.load(open(HOST_CONFIG_PATH, 'r'))
         # HOST_CONFIG_KEYS = ['private_key', 'server_ip', 'server_port', 'host_name']
@@ -69,7 +56,6 @@ class TelegramLogger(Logger):
         #   assert key in self.host_config, f"No {key} in {HOST_CONFIG_PATH}"
 
         self.last_post_time = datetime.datetime.now()
-
         self.post_worker = self.init_post_worker()
 
     # TODO
@@ -79,7 +65,7 @@ class TelegramLogger(Logger):
 
     def _log(self, level, msg, args, exc_info=None, extra=None, stack_info=False):
         # Logger._log(self, level, '[LBL] ' + msg, args, exc_info=exc_info, extra=extra, stack_info=stack_info)
-        if level >= self.post_min_level:
+        if level >= self._post_min_level:
             dt = datetime.datetime.utcnow()
             send_message(log_item(level=level, msg=msg, datetime=dt))
 
@@ -88,9 +74,9 @@ class TelegramLogger(Logger):
             cache_to_post = []
             try:
                 # TODO: lock cache
-                if self.post_max_size != -1 and len(self.cache) > self.post_max_size:
-                    cache_to_post = self.cache[-self.post_max_size :]
-                    self.cache = self.cache[: -self.post_max_size]
+                if self._post_max_size != -1 and len(self.cache) > self._post_max_size:
+                    cache_to_post = self.cache[-self._post_max_size:]
+                    self.cache = self.cache[: -self._post_max_size]
                 else:
                     cache_to_post = self.cache
                     self.cache = []
@@ -113,7 +99,7 @@ class TelegramLogger(Logger):
             "data": data,
             # TODO: datetime to str/json
             "post_time": datetime.datetime.utcnow(),
-            **self.info
+            **self._info
         }
         return res
 
