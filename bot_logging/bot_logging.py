@@ -12,6 +12,7 @@ from .sender import ServerSender
 HOST_CONFIG_PATH = "host_config.json"
 log_item = namedtuple("log_item", ["level", "msg", "datetime"])
 
+
 class TelegramLogger(Logger):
     def __init__(
         self,
@@ -22,13 +23,12 @@ class TelegramLogger(Logger):
         post_min_time_freq=5.0,
         post_max_size=-1,
         max_cache_size=1000,
-        sender = ServerSender(),
+        sender=ServerSender(),
         **kwargs
     ):
 
         self.consumer = ConsumerThread(sendDBfn=sender.send)
         self.consumer.add_producer()
-
 
         Logger.__init__(self, "TBL", level, **kwargs)
         pid = os.getpid()
@@ -68,7 +68,7 @@ class TelegramLogger(Logger):
             "data": data,
             # TODO: datetime to str/json
             "post_time": datetime.datetime.utcnow(),
-            **self._info
+            **self._info,
         }
         return res
 

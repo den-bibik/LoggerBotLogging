@@ -7,7 +7,6 @@ import time
 import random
 
 
-
 queue = []
 condition = Condition()
 
@@ -33,6 +32,8 @@ class ProducerThread(Thread):
 
 
 lock = threading.Lock()
+
+
 class Singleton(type):
     # get from https://stackoverflow.com/questions/50566934
     _instances = {}
@@ -49,10 +50,15 @@ class Singleton(type):
         return cls._instances[cls]
 
 
-
 class ConsumerThread(Thread, metaclass=Singleton):
     def __init__(
-        self, sendDBfn, max_batch=30, min_batch=10, max_history_len=200, max_time2update=5.0, **kwargs
+        self,
+        sendDBfn,
+        max_batch=30,
+        min_batch=10,
+        max_history_len=200,
+        max_time2update=5.0,
+        **kwargs,
     ):
         super(ConsumerThread, self).__init__(**kwargs)
         self.sendDB = sendDBfn
@@ -102,21 +108,23 @@ class ConsumerThread(Thread, metaclass=Singleton):
             if len(queue) == 0:
                 previous_iter_empty_queue = True
             elif previous_iter_empty_queue:
-                previous_iter_empty_queue=False
+                previous_iter_empty_queue = False
                 last_time_one_added = time.time()
 
             time2update = time.time() - last_time_one_added > self.MAX_TIME2UPDATE
             if len(queue) > self.MAX_HISTORY_LEN:
                 queue = queue[-self.MAX_HISTORY_LEN :]
 
-
             if len(queue) > self.MAX_BATCH:
-                r = queue[:self.MAX_BATCH]
-                queue = queue[self.MAX_BATCH:]
-            elif len(queue) >= self.MIN_BATCH or time2update or self.__check_last_producer():
+                r = queue[: self.MAX_BATCH]
+                queue = queue[self.MAX_BATCH :]
+            elif (
+                len(queue) >= self.MIN_BATCH
+                or time2update
+                or self.__check_last_producer()
+            ):
                 r = queue
                 queue = []
-
 
             time.sleep(0.05)
             i += 1
