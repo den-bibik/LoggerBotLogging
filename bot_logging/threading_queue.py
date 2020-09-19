@@ -1,8 +1,12 @@
 """Based on Consumer producer pattern"""
-
+import threading
 from threading import Thread, Condition
+from wrapt import synchronized
+
 import time
 import random
+
+lock = threading.Lock()
 
 queue = []
 condition = Condition()
@@ -28,7 +32,22 @@ class ProducerThread(Thread):
             send_message(f"{self.name} {i}")
 
 
-class ConsumerThread(Thread):
+class Singleton(type):
+    # get from https://stackoverflow.com/questions/50566934
+    _instances = {}
+
+    def __call__(cls, *args, **kwargs):
+        if cls not in cls._instances:
+            cls._locked_call(*args, **kwargs)
+        return cls._instances[cls]
+
+    @synchronized(lock)
+    def _locked_call(cls, *args, **kwargs):
+        if cls not in cls._instances:
+            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
+
+
+class ConsumerThread(Thread, metaclass=Singleton):
     def __init__(
         self, sendDBfn, max_batch=30, min_batch=10, max_history_len=200, **kwargs
     ):
@@ -37,6 +56,7 @@ class ConsumerThread(Thread):
         self.MAX_BATCH = max_batch
         self.MIN_BATCH = min_batch
         self.MAX_HISTORY_LEN = max_history_len
+        self.start()
 
     def run(self):
         global queue
