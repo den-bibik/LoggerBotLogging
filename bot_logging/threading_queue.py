@@ -6,7 +6,7 @@ from wrapt import synchronized
 import time
 import random
 
-lock = threading.Lock()
+
 
 queue = []
 condition = Condition()
@@ -32,6 +32,7 @@ class ProducerThread(Thread):
             send_message(f"{self.name} {i}")
 
 
+lock = threading.Lock()
 class Singleton(type):
     # get from https://stackoverflow.com/questions/50566934
     _instances = {}
@@ -45,42 +46,61 @@ class Singleton(type):
     def _locked_call(cls, *args, **kwargs):
         if cls not in cls._instances:
             cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
+        return cls._instances[cls]
+
 
 
 class ConsumerThread(Thread, metaclass=Singleton):
     def __init__(
-        self, sendDBfn, max_batch=30, min_batch=10, max_history_len=200, **kwargs
+        self, sendDBfn, max_batch=30, min_batch=10, max_history_len=200, max_time2update=0.1, **kwargs
     ):
         super(ConsumerThread, self).__init__(**kwargs)
         self.sendDB = sendDBfn
         self.MAX_BATCH = max_batch
         self.MIN_BATCH = min_batch
         self.MAX_HISTORY_LEN = max_history_len
+        self.MAX_TIME2UPDATE = max_time2update
+        self.producer_number = 1
+        self.first_producer = True
+        self.mutex_producer_number = threading.Lock()
         self.start()
+
+
 
     def run(self):
         global queue
+        previous_iter_empty_queue = True
+        last_time_one_added = -1
         while True:
             condition.acquire()
-
             if not queue:
                 print("Nothing in queue, consumer is waiting")
+                self.mutex_producer_number.acquire()
+                if self.producer_number <= 0:
+                    break
+                self.mutex_producer_number.release()
                 condition.wait()
                 print("Producer added something to queue and notified the consumer")
 
             r = None
+            if len(queue) == 0:
+                previous_iter_empty_queue = True
+            elif previous_iter_empty_queue:
+                previous_iter_empty_queue=False
+                last_time_one_added = time.time()
+
+            time2update = time.time() - last_time_one_added > self.MAX_TIME2UPDATE
             if len(queue) > self.MAX_HISTORY_LEN:
                 queue = queue[-self.MAX_HISTORY_LEN :]
 
             if len(queue) > self.MAX_BATCH:
                 r = queue[: self.MAX_BATCH]
                 queue = queue[self.MAX_BATCH :]
-            elif len(queue) >= self.MIN_BATCH:
+            elif len(queue) >= self.MIN_BATCH or time2update:
                 r = queue
                 queue = []
 
             condition.release()
-
             if r is not None:
                 if not (self.sendDB(r)):
                     print("DataBase Error")
