@@ -6,32 +6,25 @@ from wrapt import synchronized
 import time
 import random
 
-
 queue = []
 condition = Condition()
-
-
-def send_message(msg):
-    global queue
-    condition.acquire()
-    queue.append(msg)
-    condition.notify()
-    condition.release()
-
-
-class ProducerThread(Thread):
-    def __init__(self, name, **kwargs):
-        super(ProducerThread, self).__init__(**kwargs)
-        self.name = name
-
-    def run(self):
-        l = range(70)
-        for i in l:
-            time.sleep(random.random() * 0.1)
-            send_message(f"{self.name} {i}")
-
-
 lock = threading.Lock()
+
+
+class Producer():
+    def __init__(self, send_fn):
+        self.consumer = ConsumerThread(sendDBfn=send_fn)
+        self.consumer.add_producer()
+
+    def _send(self, message):
+        global queue
+        condition.acquire()
+        queue.append(message)
+        condition.notify()
+        condition.release()
+
+    def __del__(self):
+        self.consumer.del_producer()
 
 
 class Singleton(type):
@@ -137,24 +130,24 @@ class ConsumerThread(Thread, metaclass=Singleton):
                     condition.release()
 
 
-def test():
-    def sendDBTest(x):
-        MAX_WAIT_TIME = 2.0
-
-        r = random.random()
-        if r < 0.3:
-            time.sleep(random.random() * 0.1)
-            return True
-        else:
-            wait_time = random.random() * 2.5
-            time.sleep(min(MAX_WAIT_TIME, wait_time))
-            if MAX_WAIT_TIME < wait_time:
-                return False
-            else:
-                return True
-
-    [ProducerThread(name=str(i)).start() for i in range(10)]
-    ConsumerThread(sendDBfn=sendDBTest).start()
+# def test():
+#     def sendDBTest(x):
+#         MAX_WAIT_TIME = 2.0
+#
+#         r = random.random()
+#         if r < 0.3:
+#             time.sleep(random.random() * 0.1)
+#             return True
+#         else:
+#             wait_time = random.random() * 2.5
+#             time.sleep(min(MAX_WAIT_TIME, wait_time))
+#             if MAX_WAIT_TIME < wait_time:
+#                 return False
+#             else:
+#                 return True
+#
+#     [ProducerThread(name=str(i)).start() for i in range(10)]
+#     ConsumerThread(sendDBfn=sendDBTest).start()
 
 
 if __name__ == "__main__":

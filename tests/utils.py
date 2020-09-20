@@ -1,7 +1,7 @@
 class TestSender:
     def __init__(self):
-        pass
+        self.data = []
 
-    def send(self, data):
-        print(f"[sender] {data}")
+    def send(self, batch):
+        self.data.append(batch)
         return True

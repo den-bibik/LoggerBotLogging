@@ -1,1 +1,1 @@
-from .bot_logging import TelegramLogger
+from .bot_logging import RemoteLogger
