@@ -2,11 +2,9 @@ from unittest import TestCase
 
 from bot_logging import RemoteLogger
 from time import time, sleep
-import random
-from threading import Thread
 import concurrent.futures
 
-from utils import TestSender
+from bot_logging.sender import TestSender
 from datetime import datetime
 
 def multiprocessing_test():
@@ -15,8 +13,8 @@ def multiprocessing_test():
 
 def get_logger_funcs(logger):
     func_dict = {
-        "debug": logger.debug,
-        "info": logger.info,
+        #"debug": logger.debug,
+        #"info": logger.info,
         "warning": logger.warning,
         "error": logger.error,
         "critical": logger.critical,
@@ -46,7 +44,7 @@ def thread_func(sec_for_test, sender, thread_name):
         results.append(result)
         i += 1
 
-        wait_time = 0#random.random() * 0.001
+        wait_time = 0
         if time() - start_time + wait_time >= sec_for_test:
             break
         sleep(wait_time)
@@ -78,5 +76,6 @@ class Test(TestCase):
 
         data = sender.data
         print(len(data))
+
 
 

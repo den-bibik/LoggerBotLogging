@@ -2,26 +2,37 @@
 import threading
 from threading import Thread, Condition
 from wrapt import synchronized
-
+from logging import Handler
 import time
-import random
+import datetime
 
 queue = []
 condition = Condition()
 lock = threading.Lock()
 
 
-class Producer():
-    def __init__(self, send_fn):
-        self.consumer = ConsumerThread(sendDBfn=send_fn)
+class ProducerHandler(Handler):
+    def __init__(self, sender, logger_name, *args, **kwargs):
+        Handler.__init__(self, *args, **kwargs)
+        self.logger_name = logger_name
+        self.consumer = ConsumerThread(sender)
         self.consumer.add_producer()
-
-    def _send(self, message):
+        self.lock = condition
         global queue
-        condition.acquire()
+        self.queue = queue
+
+    def emit(self, record):
+        message = {
+            'level': record.levelno,
+            'event_at': datetime.datetime.utcnow(),
+            'msg': record.msg,
+            'p_name': self.logger_name,
+        }
         queue.append(message)
-        condition.notify()
-        condition.release()
+
+    def release(self):
+        self.lock.notify()
+        self.lock.release()
 
     def __del__(self):
         self.consumer.del_producer()
@@ -46,7 +57,7 @@ class Singleton(type):
 class ConsumerThread(Thread, metaclass=Singleton):
     def __init__(
         self,
-        sendDBfn,
+        sender,
         max_batch=30,
         min_batch=10,
         max_history_len=200,
@@ -54,7 +65,7 @@ class ConsumerThread(Thread, metaclass=Singleton):
         **kwargs,
     ):
         super(ConsumerThread, self).__init__(**kwargs)
-        self.sendDB = sendDBfn
+        self.sender = sender
         self.MAX_BATCH = max_batch
         self.MIN_BATCH = min_batch
         self.MAX_HISTORY_LEN = max_history_len
@@ -123,7 +134,7 @@ class ConsumerThread(Thread, metaclass=Singleton):
             i += 1
             condition.release()
             if r is not None:
-                if not (self.sendDB(r)):
+                if not (self.sender.send(r)):
                     print("DataBase Error")
                     condition.acquire()
                     queue = r + queue

@@ -1,12 +1,8 @@
 from logging import Logger
 from collections import namedtuple
-import json
-import datetime
-import os
-import psutil
-
-from .threading_queue import Producer
+from .threading_queue import ProducerHandler
 from .sender import ServerSender
+import os
 
 
 HOST_CONFIG_PATH = "host_config.json"
@@ -14,26 +10,20 @@ log_item = namedtuple("log_item", ["level", "msg", "datetime"])
 
 
 
-class RemoteLogger(Logger, Producer):
+class RemoteLogger(Logger):
     def __init__(
         self,
         process_user_desc,
-        sender=ServerSender(),
+        user_name=None,
+        host=None,
+        sender=None,
         **kwargs
     ):
-        Producer.__init__(self, sender.send)
-        Logger.__init__(self, "TBL", **kwargs)
-
-        pid = os.getpid()
-        process = psutil.Process(pid)
-        self._info = {
-            "process_user_desc": process_user_desc,
-            "pid": pid,
-            "process_name": process.name(),
-        }
-
-
-    def _log(self, level, msg, args, exc_info=None, extra=None, stack_info=False):
-        if level >= self.level:
-            dt = datetime.datetime.utcnow()
-            self._send(log_item(level=level, msg=msg, datetime=dt))
+        if sender is None:
+            assert isinstance(user_name, str), "user_name must be string"
+            assert isinstance(host, str), "host must be string"
+            user_token = os.environ['LOGGER_TOKEN']
+            sender = ServerSender(user_name, user_token, host)
+        Logger.__init__(self, "TBL " + process_user_desc, **kwargs)
+        handler = ProducerHandler(sender, process_user_desc, level = self.level)
+        self.addHandler(handler)
