@@ -24,6 +24,8 @@ class SenderBase(metaclass=Singleton):
         :param batch_logs: [ {'level':level, 'msg':msg, 'event_at':msg_datetime, ‘p_description': logger_name}, ...]
         :return: return True in case of success sending
         """
+        if len(batch_logs) == 0:
+            return True
         data = {
             "post_time": datetime.datetime.utcnow(),
             "pid": self.pid,

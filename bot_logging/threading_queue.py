@@ -11,7 +11,6 @@ queue = []
 condition = Condition()
 lock = threading.Lock()
 
-
 class Singleton(type):
     """
     From https://stackoverflow.com/questions/50566934
@@ -30,6 +29,7 @@ class Singleton(type):
         if cls not in cls._instances:
             cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
         return cls._instances[cls]
+
 
 class ProducerHandler(Handler):
     """
@@ -139,6 +139,7 @@ class ConsumerThread(Thread, metaclass=Singleton):
         last_time_one_added = -1
         i = 0
         while True:
+            print("self._producer_number", self._producer_number)
             condition.acquire()
             if not queue:
                 print("Nothing in queue, consumer is waiting")
