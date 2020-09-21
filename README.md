@@ -28,7 +28,7 @@ len(LOGGER_TOKEN) должна быть равна 32
     
  Структура
  ------------
- ![structure image](structure.jpg)
+ ![structure image](static/structure.jpg)
  
  Основной класс RemoteLogger добавляет в стандартный Logger ProducerHandler. ProducerHandler и ConsumerThread сделаны по принципу Producer/Consumer паттерна. ProducerHandler посылает записи лолов в ConsumerThread через общую переменныу queue. ConsumerThread получает батч записей из queue и посылает их на сервер. ConsumerThread завершается тогда когда завершается последний Producer.
  

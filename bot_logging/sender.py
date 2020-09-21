@@ -32,7 +32,7 @@ class SenderBase(metaclass=Singleton):
         if len(batch_logs) == 0:
             return True
         data = {
-            "post_time": datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S'),
+            "post_time": datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S"),
             "pid": self.pid,
             "process_name": self.process_name,
             "logs": batch_logs,
@@ -46,6 +46,7 @@ class SenderBase(metaclass=Singleton):
 
 class BadRequestError(Exception):
     """Bad request was provided"""
+
 
 class ServerSender(SenderBase):
     """Send to server"""

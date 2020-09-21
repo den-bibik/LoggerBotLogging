@@ -6,7 +6,7 @@ import concurrent.futures
 from bot_logging import RemoteLogger
 from bot_logging.sender import TestSender
 from bot_logging.threading_queue import Singleton
-from tests.utils import get_logger_funcs
+from bot_logging.tests import get_logger_funcs
 
 
 class LoggerLevelTest(TestCase):
