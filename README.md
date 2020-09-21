@@ -15,7 +15,7 @@ LoggerBotLogging
 
 len(LOGGER_TOKEN) должна быть равна 32
  
-Example
+Пример
 ------------
 
     from bot_logging import RemoteLogger
@@ -25,7 +25,7 @@ Example
     
     logger.info("Hello World")
     
- Structure
+ Структура
  ------------
  ![structure image](structure.jpg)
  
