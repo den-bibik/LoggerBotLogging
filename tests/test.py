@@ -6,6 +6,7 @@ import concurrent.futures
 
 from bot_logging.sender import TestSender
 from datetime import datetime
+from bot_logging.threading_queue import Singleton
 
 
 
@@ -34,14 +35,12 @@ def get_logger_funcs(logger):
 class LoggerLevelTest(TestCase):
     @staticmethod
     def _test_level(level):
-        from bot_logging.threading_queue import not_use_singleton
-        not_use_singleton()
+        Singleton.clear_instances()
         sender = TestSender()
 
         def run(sender):
-            logger = RemoteLogger("test_process", sender=TestSender(), level=level, max_history_len=1e9)
+            logger = RemoteLogger("test_process", sender=sender, level=level, max_history_len=1e9)
             for i, func in enumerate(get_logger_funcs(logger)):
-                print(f"func_{i}")
                 func("")
 
         run(sender)
@@ -67,7 +66,7 @@ class MultiThreadingTest(TestCase):
 
         for i, (result, target) in enumerate(zip(logged_thread, threads_log)):
             assert len(result) == len(target), f"missed some logs {len(result)} != {len(target)}"
-            print(f"In thread {i} len(result)={len(result)} len(target)={len(target)}")
+            #print(f"In thread {i} len(result)={len(result)} len(target)={len(target)}")
 
         return True
 

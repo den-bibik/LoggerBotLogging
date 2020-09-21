@@ -11,6 +11,8 @@ queue = []
 condition = Condition()
 lock = threading.Lock()
 
+DISPLAY = False
+
 class Singleton(type):
     """
     From https://stackoverflow.com/questions/50566934
@@ -29,6 +31,10 @@ class Singleton(type):
         if cls not in cls._instances:
             cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
         return cls._instances[cls]
+
+    @staticmethod
+    def clear_instances():
+        Singleton._instances = {}
 
 
 class ProducerHandler(Handler):
@@ -139,13 +145,17 @@ class ConsumerThread(Thread, metaclass=Singleton):
         last_time_one_added = -1
         i = 0
         while True:
-            print("self._producer_number", self._producer_number)
+            if DISPLAY:
+                print("self._producer_number", self._producer_number)
             condition.acquire()
             if not queue:
-                print("Nothing in queue, consumer is waiting")
+                if DISPLAY:
+                    print("Nothing in queue, consumer is waiting")
                 if self.__check_no_producers():
+                    condition.release()
                     break
-                print("Producer added something to queue and notified the consumer")
+                if DISPLAY:
+                    print("Producer added something to queue and notified the consumer")
 
             bacth_to_send = None
             if len(queue) == 0:
@@ -176,7 +186,8 @@ class ConsumerThread(Thread, metaclass=Singleton):
             i += 1
             if bacth_to_send is not None:
                 if not (self.sender.send(bacth_to_send)):
-                    print("DataBase Error")
+                    if DISPLAY:
+                        print("DataBase Error")
                     condition.acquire()
                     queue = bacth_to_send + queue
                     condition.release()
