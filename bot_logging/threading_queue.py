@@ -72,7 +72,7 @@ class ProducerHandler(Handler):
     def emit(self, record):
         message = {
             "level": record.levelno,
-            "event_at": datetime.datetime.utcnow(),
+            "event_at": datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S'),
             "msg": record.msg,
             "p_name": self.logger_name,
         }

@@ -2,6 +2,7 @@ import os
 import psutil
 import datetime
 import urllib3
+import json
 
 from bot_logging.threading_queue import Singleton
 from logging import Logger
@@ -31,7 +32,7 @@ class SenderBase(metaclass=Singleton):
         if len(batch_logs) == 0:
             return True
         data = {
-            "post_time": datetime.datetime.utcnow(),
+            "post_time": datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S'),
             "pid": self.pid,
             "process_name": self.process_name,
             "logs": batch_logs,
@@ -70,7 +71,7 @@ class ServerSender(SenderBase):
         r = self.http.request(
             "POST",
             "http://httpbin.org/post",
-            body=data,
+            body=json.dumps(data),
             headers={
                 "Content-Type": "application/json",
                 "X-User-Token": self.user_token,

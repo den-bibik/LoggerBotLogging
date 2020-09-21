@@ -11,7 +11,7 @@ LoggerBotLogging
     pip install -r requirements.txt
 
     export LOGGER_TOKEN=<LOGGER_TOKEN>
-Например LOGGER_TOKEN=a5amka921jkmakguasl1kna9u6sl1241 
+LOGGER_TOKEN=md5 -s {<user>}{<password>}
 
 len(LOGGER_TOKEN) должна быть равна 32
  
