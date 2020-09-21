@@ -8,7 +8,7 @@ LoggerBotLogging
 Установка
 ------------
     git clone https://github.com/den-bibik/LoggerBotLogging.git
-    pip install -r LoggerBotLogging
+    pip install -r requirements.txt
 
     export LOGGER_TOKEN=<LOGGER_TOKEN>
 Например LOGGER_TOKEN=a5amka921jkmakguasl1kna9u6sl1241 
