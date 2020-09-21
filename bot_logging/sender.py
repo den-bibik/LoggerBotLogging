@@ -43,6 +43,9 @@ class SenderBase(metaclass=Singleton):
         raise NotImplementedError()
 
 
+class BadRequestError(Exception):
+    """Bad request was provided"""
+
 class ServerSender(SenderBase):
     """Send to server"""
 
@@ -76,7 +79,7 @@ class ServerSender(SenderBase):
         if r.status == 200:
             return True
         elif r.status == 400:
-            assert False, "400: Bad Request."
+            raise BadRequestError
         else:
             logger.error("HTTP status " + r.status)
             return False
