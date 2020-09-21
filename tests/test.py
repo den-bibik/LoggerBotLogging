@@ -44,7 +44,7 @@ def thread_func(sec_for_test, sender, thread_name):
         results.append(result)
         i += 1
 
-        wait_time = 0
+        wait_time = 0.0
         if time() - start_time + wait_time >= sec_for_test:
             break
         sleep(wait_time)
@@ -54,14 +54,22 @@ def thread_func(sec_for_test, sender, thread_name):
 
 
 def check_log_results_multitheread(logged_batches, threads_log):
-    thread = threads_log[0]
-    batch = logged_batches[0]
+    logged_thread = [[]for _ in threads_log]
+    for batch in logged_batches:
+        for log in batch['logs']:
+            thread_id = int(log['p_name'].split('_')[-1])
+            logged_thread[thread_id].append(log)
+
+    for result, target in zip(logged_thread, threads_log):
+        print(len(result), len(target))
+
+    return True
 
 
 
 class Test(TestCase):
     def test(self):
-        THREAD_NUM = 5
+        THREAD_NUM = 100
         threads = []
         thread_res = []
         sender = TestSender()
@@ -74,8 +82,7 @@ class Test(TestCase):
                 res = thread.result()
                 thread_res.append(res)
 
-        data = sender.data
-        print(len(data))
+        assert check_log_results_multitheread(sender.data, thread_res)
 
 
 

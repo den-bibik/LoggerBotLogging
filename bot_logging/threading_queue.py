@@ -35,7 +35,9 @@ class ProducerHandler(Handler):
         self.lock.release()
 
     def __del__(self):
-        self.consumer.del_producer()
+        last_producer = self.consumer.del_producer()
+        if  last_producer:
+            self.consumer.join()
 
 
 class Singleton(type):
@@ -92,7 +94,9 @@ class ConsumerThread(Thread, metaclass=Singleton):
     def del_producer(self):
         self.mutex_producer_number.acquire()
         self._producer_number -= 1
+        last_producer = self._producer_number == 0
         self.mutex_producer_number.release()
+        return last_producer
 
     def run(self):
         global queue
@@ -105,7 +109,6 @@ class ConsumerThread(Thread, metaclass=Singleton):
                 print("Nothing in queue, consumer is waiting")
                 if self.__check_last_producer():
                     break
-                condition.wait()
                 print("Producer added something to queue and notified the consumer")
 
             r = None
@@ -129,16 +132,20 @@ class ConsumerThread(Thread, metaclass=Singleton):
             ):
                 r = queue
                 queue = []
-
-            time.sleep(0.05)
-            i += 1
             condition.release()
+
+            if not(len(queue) > self.MAX_BATCH):
+                time.sleep(0.1)
+
+            i += 1
             if r is not None:
                 if not (self.sender.send(r)):
                     print("DataBase Error")
                     condition.acquire()
                     queue = r + queue
                     condition.release()
+                else:
+                    r = None
 
 
 # def test():
