@@ -13,6 +13,7 @@ lock = threading.Lock()
 
 DISPLAY = False
 
+
 class Singleton(type):
     """
     From https://stackoverflow.com/questions/50566934

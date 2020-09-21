@@ -1,8 +1,12 @@
 import os
 import psutil
 import datetime
+import urllib3
 
 from bot_logging.threading_queue import Singleton
+from logging import Logger
+
+logger = Logger("internal_logger")
 
 
 class SenderBase(metaclass=Singleton):
@@ -32,6 +36,7 @@ class SenderBase(metaclass=Singleton):
             "process_name": self.process_name,
             "logs": batch_logs,
         }
+
         return self._send(data)
 
     def _send(self, data):
@@ -51,12 +56,30 @@ class ServerSender(SenderBase):
         self.user_name = user_name
         self.user_token = user_token
         self.host = host
+        self.http = urllib3.PoolManager()
 
     def _send(self, data):
         data["user"] = self.user_name
-        data["user_token"] = self.user_token
-        # TODO: send to server
-        return False
+        assert (
+            len(self.user_token) == 32
+        ), f"Length of user_token must be 32 for md5 hashing. len(self.user_token) = {len(self.user_token)}"
+
+        r = self.http.request(
+            "POST",
+            "http://httpbin.org/post",
+            body=data,
+            headers={
+                "Content-Type": "application/json",
+                "X-User-Token": self.user_token,
+            },
+        )
+        if r.status == 200:
+            return True
+        elif r.status == 400:
+            assert False, "400: Bad Request."
+        else:
+            logger.error("HTTP status " + r.status)
+            return False
 
 
 class TestSender(SenderBase):
