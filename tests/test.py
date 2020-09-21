@@ -7,14 +7,15 @@ import concurrent.futures
 from bot_logging.sender import TestSender
 from datetime import datetime
 
+
 def multiprocessing_test():
     pass
 
 
 def get_logger_funcs(logger):
     func_dict = {
-        #"debug": logger.debug,
-        #"info": logger.info,
+        # "debug": logger.debug,
+        # "info": logger.info,
         "warning": logger.warning,
         "error": logger.error,
         "critical": logger.critical,
@@ -26,6 +27,7 @@ def get_logger_funcs(logger):
             message = "This is a " + key + " message" + postfix
             func(message)
             return message, dt
+
         return test_func
 
     funcs = [get_test_func(k, func_dict[k]) for k in func_dict]
@@ -52,19 +54,17 @@ def thread_func(sec_for_test, sender, thread_name):
     return results
 
 
-
 def check_log_results_multitheread(logged_batches, threads_log):
-    logged_thread = [[]for _ in threads_log]
+    logged_thread = [[] for _ in threads_log]
     for batch in logged_batches:
-        for log in batch['logs']:
-            thread_id = int(log['p_name'].split('_')[-1])
+        for log in batch["logs"]:
+            thread_id = int(log["p_name"].split("_")[-1])
             logged_thread[thread_id].append(log)
 
     for result, target in zip(logged_thread, threads_log):
         print(len(result), len(target))
 
     return True
-
 
 
 class Test(TestCase):
@@ -75,7 +75,7 @@ class Test(TestCase):
         sender = TestSender()
         with concurrent.futures.ThreadPoolExecutor() as executor:
             for i in range(THREAD_NUM):
-                thread = executor.submit(thread_func, 2.0, sender, 'thread_' + str(i))
+                thread = executor.submit(thread_func, 2.0, sender, "thread_" + str(i))
                 threads.append(thread)
             thread_res = []
             for thread in threads:
@@ -83,6 +83,3 @@ class Test(TestCase):
                 thread_res.append(res)
 
         assert check_log_results_multitheread(sender.data, thread_res)
-
-
-

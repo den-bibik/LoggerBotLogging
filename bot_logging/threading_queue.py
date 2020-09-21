@@ -12,10 +12,31 @@ lock = threading.Lock()
 
 
 class ProducerHandler(Handler):
-    def __init__(self, sender, logger_name, *args, **kwargs):
+    """
+    Send message to ConsumerThread throw shared queue
+    Used as handler in Logger
+    """
+
+    def __init__(
+        self,
+        sender,
+        logger_name,
+        max_batch,
+        min_batch,
+        max_history_len,
+        max_time2update,
+        *args,
+        **kwargs,
+    ):
         Handler.__init__(self, *args, **kwargs)
         self.logger_name = logger_name
-        self.consumer = ConsumerThread(sender)
+        self.consumer = ConsumerThread(
+            sender,
+            max_batch=max_batch,
+            min_batch=min_batch,
+            max_history_len=max_history_len,
+            max_time2update=max_time2update
+        )
         self.consumer.add_producer()
         self.lock = condition
         global queue
@@ -23,10 +44,10 @@ class ProducerHandler(Handler):
 
     def emit(self, record):
         message = {
-            'level': record.levelno,
-            'event_at': datetime.datetime.utcnow(),
-            'msg': record.msg,
-            'p_name': self.logger_name,
+            "level": record.levelno,
+            "event_at": datetime.datetime.utcnow(),
+            "msg": record.msg,
+            "p_name": self.logger_name,
         }
         queue.append(message)
 
@@ -36,12 +57,16 @@ class ProducerHandler(Handler):
 
     def __del__(self):
         last_producer = self.consumer.del_producer()
-        if  last_producer:
+        if last_producer:
             self.consumer.join()
 
 
 class Singleton(type):
-    # get from https://stackoverflow.com/questions/50566934
+    """
+    From https://stackoverflow.com/questions/50566934
+    We need only one ConsumerThread and ServerSender
+    """
+
     _instances = {}
 
     def __call__(cls, *args, **kwargs):
@@ -57,13 +82,23 @@ class Singleton(type):
 
 
 class ConsumerThread(Thread, metaclass=Singleton):
+    """
+    Take data from shared queue and send by self.sender
+
+    Methods:
+        run - main cycle in Thread
+        add_producer - you need call it on every new producer created
+        del_producer - you need call it on every producer deleted.
+                    Thread will ended only when last producer will be deleted.
+    """
+
     def __init__(
         self,
         sender,
-        max_batch=30,
-        min_batch=10,
-        max_history_len=200,
-        max_time2update=5.0,
+        max_batch,
+        min_batch,
+        max_history_len,
+        max_time2update,
         **kwargs,
     ):
         super(ConsumerThread, self).__init__(**kwargs)
@@ -134,7 +169,7 @@ class ConsumerThread(Thread, metaclass=Singleton):
                 queue = []
             condition.release()
 
-            if not(len(queue) > self.MAX_BATCH):
+            if not (len(queue) > self.MAX_BATCH):
                 time.sleep(0.1)
 
             i += 1
