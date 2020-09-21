@@ -1,11 +1,11 @@
 from unittest import TestCase
 
-from bot_logging import RemoteLogger
+from datetime import datetime
 from time import time, sleep
 import concurrent.futures
 
+from bot_logging import RemoteLogger
 from bot_logging.sender import TestSender
-from datetime import datetime
 from bot_logging.threading_queue import Singleton
 
 
