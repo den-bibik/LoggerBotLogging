@@ -1,15 +1,35 @@
-"""Based on Consumer producer pattern"""
+"""Based on Consumer Producer pattern"""
 import threading
 from threading import Thread, Condition
-from wrapt import synchronized
 from logging import Handler
 import time
 import datetime
+from wrapt import synchronized
+
 
 queue = []
 condition = Condition()
 lock = threading.Lock()
 
+
+class Singleton(type):
+    """
+    From https://stackoverflow.com/questions/50566934
+    We need only one ConsumerThread and ServerSender
+    """
+
+    _instances = {}
+
+    def __call__(cls, *args, **kwargs):
+        if cls not in cls._instances:
+            cls._locked_call(*args, **kwargs)
+        return cls._instances[cls]
+
+    @synchronized(lock)
+    def _locked_call(cls, *args, **kwargs):
+        if cls not in cls._instances:
+            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
+        return cls._instances[cls]
 
 class ProducerHandler(Handler):
     """
@@ -24,7 +44,7 @@ class ProducerHandler(Handler):
         max_batch,
         min_batch,
         max_history_len,
-        max_time2update,
+        max_time_to_update,
         *args,
         **kwargs,
     ):
@@ -35,7 +55,7 @@ class ProducerHandler(Handler):
             max_batch=max_batch,
             min_batch=min_batch,
             max_history_len=max_history_len,
-            max_time2update=max_time2update
+            max_time_to_update=max_time_to_update,
         )
         self.consumer.add_producer()
         self.lock = condition
@@ -61,26 +81,6 @@ class ProducerHandler(Handler):
             self.consumer.join()
 
 
-class Singleton(type):
-    """
-    From https://stackoverflow.com/questions/50566934
-    We need only one ConsumerThread and ServerSender
-    """
-
-    _instances = {}
-
-    def __call__(cls, *args, **kwargs):
-        if cls not in cls._instances:
-            cls._locked_call(*args, **kwargs)
-        return cls._instances[cls]
-
-    @synchronized(lock)
-    def _locked_call(cls, *args, **kwargs):
-        if cls not in cls._instances:
-            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
-        return cls._instances[cls]
-
-
 class ConsumerThread(Thread, metaclass=Singleton):
     """
     Take data from shared queue and send by self.sender
@@ -98,21 +98,21 @@ class ConsumerThread(Thread, metaclass=Singleton):
         max_batch,
         min_batch,
         max_history_len,
-        max_time2update,
+        max_time_to_update,
         **kwargs,
     ):
-        super(ConsumerThread, self).__init__(**kwargs)
+        Thread.__init__(self, **kwargs)
         self.sender = sender
         self.MAX_BATCH = max_batch
         self.MIN_BATCH = min_batch
         self.MAX_HISTORY_LEN = max_history_len
-        self.MAX_TIME2UPDATE = max_time2update
+        self.MAX_TIME_TO_UPDATE = max_time_to_update
         self._producer_number = 1
         self._first_producer = True
         self.mutex_producer_number = threading.Lock()
         self.start()
 
-    def __check_last_producer(self):
+    def __check_no_producers(self):
         self.mutex_producer_number.acquire()
         is_last = self._producer_number <= 0
         self.mutex_producer_number.release()
@@ -142,30 +142,30 @@ class ConsumerThread(Thread, metaclass=Singleton):
             condition.acquire()
             if not queue:
                 print("Nothing in queue, consumer is waiting")
-                if self.__check_last_producer():
+                if self.__check_no_producers():
                     break
                 print("Producer added something to queue and notified the consumer")
 
-            r = None
+            bacth_to_send = None
             if len(queue) == 0:
                 previous_iter_empty_queue = True
             elif previous_iter_empty_queue:
                 previous_iter_empty_queue = False
                 last_time_one_added = time.time()
 
-            time2update = time.time() - last_time_one_added > self.MAX_TIME2UPDATE
+            time2update = time.time() - last_time_one_added > self.MAX_TIME_TO_UPDATE
             if len(queue) > self.MAX_HISTORY_LEN:
                 queue = queue[-self.MAX_HISTORY_LEN :]
 
             if len(queue) > self.MAX_BATCH:
-                r = queue[: self.MAX_BATCH]
+                bacth_to_send = queue[: self.MAX_BATCH]
                 queue = queue[self.MAX_BATCH :]
             elif (
                 len(queue) >= self.MIN_BATCH
                 or time2update
-                or self.__check_last_producer()
+                or self.__check_no_producers()
             ):
-                r = queue
+                bacth_to_send = queue
                 queue = []
             condition.release()
 
@@ -173,36 +173,11 @@ class ConsumerThread(Thread, metaclass=Singleton):
                 time.sleep(0.1)
 
             i += 1
-            if r is not None:
-                if not (self.sender.send(r)):
+            if bacth_to_send is not None:
+                if not (self.sender.send(bacth_to_send)):
                     print("DataBase Error")
                     condition.acquire()
-                    queue = r + queue
+                    queue = bacth_to_send + queue
                     condition.release()
                 else:
-                    r = None
-
-
-# def test():
-#     def sendDBTest(x):
-#         MAX_WAIT_TIME = 2.0
-#
-#         r = random.random()
-#         if r < 0.3:
-#             time.sleep(random.random() * 0.1)
-#             return True
-#         else:
-#             wait_time = random.random() * 2.5
-#             time.sleep(min(MAX_WAIT_TIME, wait_time))
-#             if MAX_WAIT_TIME < wait_time:
-#                 return False
-#             else:
-#                 return True
-#
-#     [ProducerThread(name=str(i)).start() for i in range(10)]
-#     ConsumerThread(sendDBfn=sendDBTest).start()
-
-
-if __name__ == "__main__":
-    # test()
-    pass
+                    bacth_to_send = None

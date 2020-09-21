@@ -8,9 +8,6 @@ from bot_logging.sender import TestSender
 from datetime import datetime
 
 
-def multiprocessing_test():
-    pass
-
 
 def get_logger_funcs(logger):
     func_dict = {
@@ -36,7 +33,7 @@ def get_logger_funcs(logger):
 
 def thread_func(sec_for_test, sender, thread_name):
     start_time = time()
-    logger = RemoteLogger("test_process_" + thread_name, sender=sender)
+    logger = RemoteLogger("test_process_" + thread_name, sender=sender, max_history_len=1e9)
     funcs = get_logger_funcs(logger)
     i = 0
     results = []
@@ -61,8 +58,9 @@ def check_log_results_multitheread(logged_batches, threads_log):
             thread_id = int(log["p_name"].split("_")[-1])
             logged_thread[thread_id].append(log)
 
-    for result, target in zip(logged_thread, threads_log):
-        print(len(result), len(target))
+    for i, (result, target) in enumerate(zip(logged_thread, threads_log)):
+        assert len(result) == len(target), f"missed some logs {len(result)} != {len(target)}"
+        print(f"In thread {i} len(result)={len(result)} len(target)={len(target)}")
 
     return True
 

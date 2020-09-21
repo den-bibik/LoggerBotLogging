@@ -4,9 +4,12 @@ from .threading_queue import ProducerHandler
 from .sender import ServerSender
 import os
 
-
-HOST_CONFIG_PATH = "host_config.json"
 log_item = namedtuple("log_item", ["level", "msg", "datetime"])
+
+DEFAULT_MAX_BATCH = 30
+DEFAULT_MIN_BATCH = 10
+DEFAULT_MAX_HISTORY_LEN = 200
+DEFAULT_MAX_TIME_TO_UPDATE = 5.0
 
 
 class RemoteLogger(Logger):
@@ -20,10 +23,10 @@ class RemoteLogger(Logger):
         user_name=None,
         host=None,
         sender=None,
-        max_batch=30,
-        min_batch=10,
-        max_history_len=200,
-        max_time2update=5.0,
+        max_batch=DEFAULT_MAX_BATCH,
+        min_batch=DEFAULT_MIN_BATCH,
+        max_history_len=DEFAULT_MAX_HISTORY_LEN,
+        max_tim_to_update=DEFAULT_MAX_TIME_TO_UPDATE,
         **kwargs
     ):
         """
@@ -34,7 +37,7 @@ class RemoteLogger(Logger):
         :param max_batch: sending params
         :param min_batch: sending params
         :param max_history_len: max size for query
-        :param max_time2update: send batch with size less then min_batch
+        :param max_tim_to_update: send batch with size less then min_batch
         :param kwargs:
         """
         if sender is None:
@@ -49,7 +52,7 @@ class RemoteLogger(Logger):
             max_batch=max_batch,
             min_batch=min_batch,
             max_history_len=max_history_len,
-            max_time2update=max_time2update,
+            max_time_to_update=max_tim_to_update,
             level=self.level,
         )
         self.addHandler(handler)

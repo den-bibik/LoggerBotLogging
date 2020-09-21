@@ -2,7 +2,7 @@ import os
 import psutil
 import datetime
 
-from .threading_queue import Singleton
+from bot_logging.threading_queue import Singleton
 
 
 class SenderBase(metaclass=Singleton):
@@ -10,6 +10,7 @@ class SenderBase(metaclass=Singleton):
     Used by ConsumerThread to send batched logs from queue
     Singleton like ConsumerThread
     """
+
     def __init__(self):
         pid = os.getpid()
         process = psutil.Process(pid)
@@ -37,6 +38,7 @@ class SenderBase(metaclass=Singleton):
 
 class ServerSender(SenderBase):
     """Send to server"""
+
     def __init__(self, user_name, user_token, host):
         """
         :param user_name: auth
@@ -59,6 +61,7 @@ class TestSender(SenderBase):
     """
     Send to self.data. Use for tests.
     """
+
     def __init__(self):
         SenderBase.__init__(self)
         self.data = []
