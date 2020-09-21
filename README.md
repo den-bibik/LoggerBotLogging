@@ -8,10 +8,11 @@ LoggerBotLogging
 Установка
 ------------
     git clone https://github.com/den-bibik/LoggerBotLogging.git
-    pip install -r LoggerBotLogging
+    pip install -r requirements.txt
 
     export LOGGER_TOKEN=<LOGGER_TOKEN>
-Например LOGGER_TOKEN=a5amka921jkmakguasl1kna9u6sl1241 
+    
+    LOGGER_TOKEN=md5 -s $user$password
 
 len(LOGGER_TOKEN) должна быть равна 32
  
@@ -27,7 +28,7 @@ len(LOGGER_TOKEN) должна быть равна 32
     
  Структура
  ------------
- ![structure image](structure.jpg)
+ ![structure image](static/structure.jpg)
  
  Основной класс RemoteLogger добавляет в стандартный Logger ProducerHandler. ProducerHandler и ConsumerThread сделаны по принципу Producer/Consumer паттерна. ProducerHandler посылает записи лолов в ConsumerThread через общую переменныу queue. ConsumerThread получает батч записей из queue и посылает их на сервер. ConsumerThread завершается тогда когда завершается последний Producer.
  
