@@ -1,19 +1,19 @@
 LoggerBotLogging
 ============================
 
-Client part of LoggerBot.
+Клиентская часть LoggerBot.
 
-Server on https://github.com/WesBAn/LoggerBotLoggingServer
+Сервер  -- https://github.com/WesBAn/LoggerBotLoggingServer
 
-INSTALLATION
+Установка
 ------------
     git clone https://github.com/den-bibik/LoggerBotLogging.git
     pip install -r LoggerBotLogging
 
     export LOGGER_TOKEN=<LOGGER_TOKEN>
-For example LOGGER_TOKEN=a5amka921jkmakguasl1kna9u6sl1241 
+Например LOGGER_TOKEN=a5amka921jkmakguasl1kna9u6sl1241 
 
-LOGGER_TOKEN must 32 char length
+len(LOGGER_TOKEN) должна быть равна 32
  
 Example
 ------------
@@ -29,6 +29,25 @@ Example
  ------------
  ![structure image](structure.jpg)
  
- Main Class RemoteLogger add to Logger ProducerHandler. ProducerHandler and ConsumerThread created like Producer/Consumer pattern. ProducerHandler send log records to ConsumerThread throw shared variable queue. ConsumerThread get batch of log records from queue and send it to server. 
- ConsumerThread will be end when last Producer will die.
+ Основной класс RemoteLogger добавляет в стандартный Logger ProducerHandler. ProducerHandler и ConsumerThread сделаны по принципу Producer/Consumer паттерна. ProducerHandler посылает записи лолов в ConsumerThread через общую переменныу queue. ConsumerThread получает батч записей из queue и посылает их на сервер. ConsumerThread завершается тогда когда завершается последний Producer.
  
+ ### Документация
+```
+source venv/bin/activate
+export PYTHONPATH=`pwd`
+python3 -m pydoc -p port bot_logging
+```
+По полученной ссылке можно посмотреть документацию
+
+### Тестирование
+Для тестирования используется стандартный фреймворк pytest
+```
+source venv/bin/activate
+export PYTHONPATH=`pwd`
+python -m unittest tests/test.py 
+```
+
+### Сборка колеса
+```
+source venv/bin/activate
+python3 setup.py bdist_wheel
