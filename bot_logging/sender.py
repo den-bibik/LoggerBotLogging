@@ -70,7 +70,7 @@ class ServerSender(SenderBase):
 
         r = self.http.request(
             "POST",
-            "http://httpbin.org/post",
+            self.host,
             body=json.dumps(data),
             headers={
                 "Content-Type": "application/json",
