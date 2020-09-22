@@ -1,12 +1,11 @@
-from unittest import TestCase
-
-from time import time, sleep
 import concurrent.futures
+from time import time, sleep
+from unittest import TestCase
 
 from bot_logging import RemoteLogger
 from bot_logging.sender import TestSender
+from bot_logging.tests.utils import get_logger_funcs
 from bot_logging.threading_queue import Singleton
-from bot_logging.tests import get_logger_funcs
 
 
 class LoggerLevelTest(TestCase):
@@ -19,18 +18,18 @@ class LoggerLevelTest(TestCase):
             logger = RemoteLogger(
                 "test_process", sender=sender, level=level, max_history_len=1e9
             )
-            for i, func in enumerate(get_logger_funcs(logger)):
+            for func in get_logger_funcs(logger):
                 func("")
 
         run(sender)
         min_level = 50
         for batch in sender.data:
-            for log in batch["logs"]:
+            for log in batch["data"]["logs"]:
                 min_level = min(log["level"], min_level)
         assert min_level == level, f"min_level = {min_level}, level = {level}"
 
     def test(self):
-        for level in [10, 20, 30, 40, 50]:
+        for level in [30, 40, 50]:
             self._test_level(level)
 
 
@@ -39,11 +38,11 @@ class MultiThreadingTest(TestCase):
     def _check_log_results_multitheread(logged_batches, threads_log):
         logged_thread = [[] for _ in threads_log]
         for batch in logged_batches:
-            for log in batch["logs"]:
-                thread_id = int(log["p_name"].split("_")[-1])
+            for log in batch["data"]["logs"]:
+                thread_id = int(log["p_description"].split("_")[-1])
                 logged_thread[thread_id].append(log)
 
-        for i, (result, target) in enumerate(zip(logged_thread, threads_log)):
+        for result, target in zip(logged_thread, threads_log):
             assert len(result) == len(
                 target
             ), f"missed some logs {len(result)} != {len(target)}"
@@ -55,7 +54,7 @@ class MultiThreadingTest(TestCase):
     def _thread_func(sec_for_test, sender, thread_name):
         start_time = time()
         logger = RemoteLogger(
-            "test_process_" + thread_name, sender=sender, level=0, max_history_len=1e9
+            "test_process_" + thread_name, sender=sender, max_history_len=1e9
         )
         funcs = get_logger_funcs(logger)
         i = 0
@@ -75,12 +74,12 @@ class MultiThreadingTest(TestCase):
 
     def test(self):
         Singleton.clear_instances()
-        THREAD_NUM = 100
+        thread_num = 100
         threads = []
         thread_res = []
         sender = TestSender()
         with concurrent.futures.ThreadPoolExecutor() as executor:
-            for i in range(THREAD_NUM):
+            for i in range(thread_num):
                 thread = executor.submit(
                     self._thread_func, 2.0, sender, "thread_" + str(i)
                 )

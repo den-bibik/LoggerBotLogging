@@ -9,10 +9,10 @@ LoggerBotLogging
 ------------
     git clone https://github.com/den-bibik/LoggerBotLogging.git
     pip install -r requirements.txt
+    pip install -e .
 
-    export LOGGER_TOKEN=<LOGGER_TOKEN>
+    export LOGGER_TOKEN==($(md5 -q -s {$user_bot_logging}{$password_bot_logging}))
     
-    LOGGER_TOKEN=md5 -s $user$password
 
 len(LOGGER_TOKEN) должна быть равна 32
  
@@ -21,10 +21,10 @@ len(LOGGER_TOKEN) должна быть равна 32
 
     from bot_logging import RemoteLogger
     
-    logger_name = ""
-    logger = RemoteLogger(logger_name, user_name, user_host)
-    
-    logger.info("Hello World")
+    logger = RemoteLogger('log1', 'denis', 'http://localhost:5000')
+    logger.error("Hello World")
+    logger.stop()
+
     
  Структура
  ------------
@@ -45,7 +45,12 @@ python3 -m pydoc -p port bot_logging
 ```
 source venv/bin/activate
 export PYTHONPATH=`pwd`
-python -m unittest tests/test.py 
+python3 -m unittest bot_logging/tests/test_logger.py 
+```
+### Pylint
+```
+source venv/bin/activate
+python3 -m pylint bot_logging
 ```
 
 ### Сборка колеса

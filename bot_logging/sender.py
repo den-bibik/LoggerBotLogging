@@ -1,11 +1,12 @@
-import os
-import psutil
 import datetime
-import urllib3
 import json
+import os
+from logging import Logger
+
+import psutil
+import urllib3
 
 from bot_logging.threading_queue import Singleton
-from logging import Logger
 
 SEND_LOGS_ENDPOINT = "/send_logs"
 
@@ -28,7 +29,9 @@ class SenderBase(metaclass=Singleton):
         """
         Add metadata about process and send datetime and send it by method _send()
 
-        :param batch_logs: [ {'level':level, 'msg':msg, 'event_at':msg_datetime, ‘p_description': logger_name}, ...]
+        :param batch_logs: [ {'level':level, 'msg':msg,
+                              'event_at':msg_datetime,
+                              ‘p_description': logger_name}, ...]
         :return: return True in case of success sending
         """
         if len(batch_logs) == 0:
@@ -70,10 +73,11 @@ class ServerSender(SenderBase):
     def _send(self, data):
         data["data"]["user"] = self.user_name
         assert (
-            len(self.user_token) == 32
-        ), f"Length of user_token must be 32 for md5 hashing. len(self.user_token) = {len(self.user_token)}"
+                len(self.user_token) == 32
+        ), f"Length of user_token must be 32 for md5 hashing." \
+           f" len(self.user_token) = {len(self.user_token)}"
         url = "/".join([self.host, SEND_LOGS_ENDPOINT])
-        r = self.http.request(
+        request = self.http.request(
             "POST",
             url,
             body=json.dumps(data),
@@ -82,13 +86,12 @@ class ServerSender(SenderBase):
                 "X-User-Token": self.user_token,
             },
         )
-        if r.status == 200:
+        if request.status == 200:
             return True
-        elif r.status == 400:
+        if request.status == 400:
             raise BadRequestError
-        else:
-            logger.error("HTTP status " + str(r.status))
-            return False
+        logger.error("HTTP status %s", request.status)
+        return False
 
 
 class TestSender(SenderBase):
