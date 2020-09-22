@@ -3,8 +3,6 @@ from datetime import datetime
 
 def get_logger_funcs(logger):
     func_dict = {
-        "debug": logger.debug,
-        "info": logger.info,
         "warning": logger.warning,
         "error": logger.error,
         "critical": logger.critical,
@@ -12,10 +10,10 @@ def get_logger_funcs(logger):
 
     def get_test_func(key, func):
         def test_func(postfix):
-            dt = datetime.now()
+            datetime_now = datetime.now()
             message = "This is a " + key + " message" + postfix
             func(message)
-            return message, dt
+            return message, datetime_now
 
         return test_func
 

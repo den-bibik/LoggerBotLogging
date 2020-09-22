@@ -2,10 +2,10 @@ import os
 from collections import namedtuple
 from logging import Logger
 
-from .sender import ServerSender
-from .threading_queue import ProducerHandler
+from bot_logging.sender import ServerSender
+from bot_logging.threading_queue import ProducerHandler
 
-log_item = namedtuple("log_item", ["level", "msg", "datetime"])
+LogItem = namedtuple("log_item", ["level", "msg", "datetime"])
 
 DEFAULT_MAX_BATCH = 30
 DEFAULT_MIN_BATCH = 10
@@ -28,6 +28,7 @@ class RemoteLogger(Logger):
             min_batch=DEFAULT_MIN_BATCH,
             max_history_len=DEFAULT_MAX_HISTORY_LEN,
             max_tim_to_update=DEFAULT_MAX_TIME_TO_UPDATE,
+            level=30,
             **kwargs
     ):
         """
@@ -46,14 +47,16 @@ class RemoteLogger(Logger):
             assert isinstance(host, str), "host must be string"
             user_token = os.environ["LOGGER_TOKEN"]
             sender = ServerSender(user_name, user_token, host)
+        kwargs['level'] = level
         Logger.__init__(self, "TBL " + logger_name, **kwargs)
-        handler = ProducerHandler(
+        self._handler = ProducerHandler(
             sender,
             logger_name,
             max_batch=max_batch,
             min_batch=min_batch,
             max_history_len=max_history_len,
             max_time_to_update=max_tim_to_update,
-            level=self.level,
+            level=level,
         )
-        self.addHandler(handler)
+
+        self.addHandler(self._handler)

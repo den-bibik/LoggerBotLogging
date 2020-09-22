@@ -68,16 +68,17 @@ class ServerSender(SenderBase):
         self.user_name = user_name
         self.user_token = user_token
         self.host = host
+        self.port = port
         self.http = urllib3.PoolManager()
 
     def _send(self, data):
-        data["data"]["user"] = self.user_name
+        data["user"] = self.user_name
         assert (
                 len(self.user_token) == 32
         ), f"Length of user_token must be 32 for md5 hashing." \
            f" len(self.user_token) = {len(self.user_token)}"
         url = "/".join([self.host, SEND_LOGS_ENDPOINT])
-        r = self.http.request(
+        request = self.http.request(
             "POST",
             url,
             body=json.dumps(data),
@@ -86,11 +87,11 @@ class ServerSender(SenderBase):
                 "X-User-Token": self.user_token,
             },
         )
-        if r.status == 200:
+        if request.status == 200:
             return True
-        if r.status == 400:
+        if request.status == 400:
             raise BadRequestError
-        logger.error("HTTP status " + r.status)
+        logger.error("HTTP status %s", request.status)
         return False
 
 
