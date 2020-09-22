@@ -68,7 +68,6 @@ class ServerSender(SenderBase):
         self.user_name = user_name
         self.user_token = user_token
         self.host = host
-        self.port = port
         self.http = urllib3.PoolManager()
 
     def _send(self, data):

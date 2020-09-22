@@ -24,7 +24,7 @@ class LoggerLevelTest(TestCase):
         run(sender)
         min_level = 50
         for batch in sender.data:
-            for log in batch["logs"]:
+            for log in batch["data"]["logs"]:
                 min_level = min(log["level"], min_level)
         assert min_level == level, f"min_level = {min_level}, level = {level}"
 
@@ -38,8 +38,8 @@ class MultiThreadingTest(TestCase):
     def _check_log_results_multitheread(logged_batches, threads_log):
         logged_thread = [[] for _ in threads_log]
         for batch in logged_batches:
-            for log in batch["logs"]:
-                thread_id = int(log["p_name"].split("_")[-1])
+            for log in batch["data"]["logs"]:
+                thread_id = int(log["p_description"].split("_")[-1])
                 logged_thread[thread_id].append(log)
 
         for result, target in zip(logged_thread, threads_log):
