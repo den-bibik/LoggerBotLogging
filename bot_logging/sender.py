@@ -29,12 +29,9 @@ class SenderBase(metaclass=Singleton):
         """
         Add metadata about process and send datetime and send it by method _send()
 
-        :param batch_logs: [ {
-                                'level':level,
-                                'msg':msg,
-                                'event_at':msg_datetime,
-                                ‘p_description': logger_name
-                                }, ...]
+        :param batch_logs: [ {'level':level, 'msg':msg,
+                              'event_at':msg_datetime,
+                              ‘p_description': logger_name}, ...]
         :return: return True in case of success sending
         """
         if len(batch_logs) == 0:
@@ -76,8 +73,9 @@ class ServerSender(SenderBase):
     def _send(self, data):
         data["data"]["user"] = self.user_name
         assert (
-            len(self.user_token) == 32
-        ), f"Length of user_token must be 32 for md5 hashing. len(self.user_token) = {len(self.user_token)}"
+                len(self.user_token) == 32
+        ), f"Length of user_token must be 32 for md5 hashing." \
+           f" len(self.user_token) = {len(self.user_token)}"
         url = "/".join([self.host, SEND_LOGS_ENDPOINT])
         r = self.http.request(
             "POST",

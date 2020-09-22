@@ -19,16 +19,16 @@ class RemoteLogger(Logger):
     """
 
     def __init__(
-        self,
-        logger_name,
-        user_name=None,
-        host=None,
-        sender=None,
-        max_batch=DEFAULT_MAX_BATCH,
-        min_batch=DEFAULT_MIN_BATCH,
-        max_history_len=DEFAULT_MAX_HISTORY_LEN,
-        max_tim_to_update=DEFAULT_MAX_TIME_TO_UPDATE,
-        **kwargs
+            self,
+            logger_name,
+            user_name=None,
+            host=None,
+            sender=None,
+            max_batch=DEFAULT_MAX_BATCH,
+            min_batch=DEFAULT_MIN_BATCH,
+            max_history_len=DEFAULT_MAX_HISTORY_LEN,
+            max_tim_to_update=DEFAULT_MAX_TIME_TO_UPDATE,
+            **kwargs
     ):
         """
         :param logger_name: name for current logger

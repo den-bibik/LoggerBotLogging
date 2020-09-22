@@ -2,7 +2,7 @@
 import datetime
 import threading
 import time
-from logging import Handler
+from logging import Handler, Logger
 from threading import Thread, Condition
 
 from wrapt import synchronized
@@ -12,6 +12,7 @@ condition = Condition()
 lock = threading.Lock()
 
 DISPLAY = False
+logger = Logger("internal_logger")
 
 
 class Singleton(type):
@@ -45,17 +46,22 @@ class ProducerHandler(Handler):
     """
 
     def __init__(
-        self,
-        sender,
-        logger_name,
-        max_batch,
-        min_batch,
-        max_history_len,
-        max_time_to_update,
-        *args,
-        **kwargs,
+            self,
+            sender,
+            logger_name,
+            max_batch,
+            min_batch,
+            max_history_len,
+            max_time_to_update,
+            *args,
+            **kwargs,
     ):
         Handler.__init__(self, *args, **kwargs)
+
+        if self.level < 30:
+            logger.warning(f"Level was {self.level} < 30. Level set to 30.")
+            self.level = 30
+
         self.logger_name = logger_name
         self.consumer = ConsumerThread(
             sender,
@@ -100,13 +106,13 @@ class ConsumerThread(Thread, metaclass=Singleton):
     """
 
     def __init__(
-        self,
-        sender,
-        max_batch,
-        min_batch,
-        max_history_len,
-        max_time_to_update,
-        **kwargs,
+            self,
+            sender,
+            max_batch,
+            min_batch,
+            max_history_len,
+            max_time_to_update,
+            **kwargs,
     ):
         Thread.__init__(self, **kwargs)
         self.sender = sender
@@ -167,15 +173,15 @@ class ConsumerThread(Thread, metaclass=Singleton):
 
             time2update = time.time() - last_time_one_added > self.MAX_TIME_TO_UPDATE
             if len(queue) > self.MAX_HISTORY_LEN:
-                queue = queue[-self.MAX_HISTORY_LEN :]
+                queue = queue[-self.MAX_HISTORY_LEN:]
 
             if len(queue) > self.MAX_BATCH:
                 bacth_to_send = queue[: self.MAX_BATCH]
-                queue = queue[self.MAX_BATCH :]
+                queue = queue[self.MAX_BATCH:]
             elif (
-                len(queue) >= self.MIN_BATCH
-                or time2update
-                or self.__check_no_producers()
+                    len(queue) >= self.MIN_BATCH
+                    or time2update
+                    or self.__check_no_producers()
             ):
                 bacth_to_send = queue
                 queue = []
