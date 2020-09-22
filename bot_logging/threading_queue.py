@@ -1,11 +1,11 @@
 """Based on Consumer Producer pattern"""
-import threading
-from threading import Thread, Condition
-from logging import Handler
-import time
 import datetime
-from wrapt import synchronized
+import threading
+import time
+from logging import Handler
+from threading import Thread, Condition
 
+from wrapt import synchronized
 
 queue = []
 condition = Condition()
@@ -192,5 +192,6 @@ class ConsumerThread(Thread, metaclass=Singleton):
                     condition.acquire()
                     queue = bacth_to_send + queue
                     condition.release()
+                    time.sleep(5.0)
                 else:
                     bacth_to_send = None

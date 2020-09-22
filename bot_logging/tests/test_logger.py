@@ -1,12 +1,11 @@
-from unittest import TestCase
-
-from time import time, sleep
 import concurrent.futures
+from time import time, sleep
+from unittest import TestCase
 
 from bot_logging import RemoteLogger
 from bot_logging.sender import TestSender
+from bot_logging.tests.utils import get_logger_funcs
 from bot_logging.threading_queue import Singleton
-from bot_logging.tests import get_logger_funcs
 
 
 class LoggerLevelTest(TestCase):

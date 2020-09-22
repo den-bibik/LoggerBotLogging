@@ -1,8 +1,9 @@
-from logging import Logger
-from collections import namedtuple
-from .threading_queue import ProducerHandler
-from .sender import ServerSender
 import os
+from collections import namedtuple
+from logging import Logger
+
+from .sender import ServerSender
+from .threading_queue import ProducerHandler
 
 log_item = namedtuple("log_item", ["level", "msg", "datetime"])
 

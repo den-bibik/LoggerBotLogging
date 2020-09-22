@@ -1,11 +1,12 @@
-import os
-import psutil
 import datetime
-import urllib3
 import json
+import os
+from logging import Logger
+
+import psutil
+import urllib3
 
 from bot_logging.threading_queue import Singleton
-from logging import Logger
 
 SEND_LOGS_ENDPOINT = "/send_logs"
 
@@ -28,7 +29,12 @@ class SenderBase(metaclass=Singleton):
         """
         Add metadata about process and send datetime and send it by method _send()
 
-        :param batch_logs: [ {'level':level, 'msg':msg, 'event_at':msg_datetime, ‘p_description': logger_name}, ...]
+        :param batch_logs: [ {
+                                'level':level,
+                                'msg':msg,
+                                'event_at':msg_datetime,
+                                ‘p_description': logger_name
+                                }, ...]
         :return: return True in case of success sending
         """
         if len(batch_logs) == 0:
@@ -84,11 +90,10 @@ class ServerSender(SenderBase):
         )
         if r.status == 200:
             return True
-        elif r.status == 400:
+        if r.status == 400:
             raise BadRequestError
-        else:
-            logger.error("HTTP status " + str(r.status))
-            return False
+        logger.error("HTTP status " + r.status)
+        return False
 
 
 class TestSender(SenderBase):
