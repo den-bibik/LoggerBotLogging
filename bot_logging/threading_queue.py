@@ -74,7 +74,7 @@ class ProducerHandler(Handler):
             "level": record.levelno,
             "event_at": datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S"),
             "msg": record.msg,
-            "p_name": self.logger_name,
+            "p_description": self.logger_name,
         }
         queue.append(message)
 

@@ -7,6 +7,8 @@ import json
 from bot_logging.threading_queue import Singleton
 from logging import Logger
 
+SEND_LOGS_ENDPOINT = "/send_logs"
+
 logger = Logger("internal_logger")
 
 
@@ -32,10 +34,12 @@ class SenderBase(metaclass=Singleton):
         if len(batch_logs) == 0:
             return True
         data = {
-            "post_time": datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S"),
-            "pid": self.pid,
-            "process_name": self.process_name,
-            "logs": batch_logs,
+            "data": {
+                "post_time": datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S"),
+                "pid": self.pid,
+                "p_name": self.process_name,
+                "logs": batch_logs,
+            }
         }
 
         return self._send(data)
@@ -64,14 +68,14 @@ class ServerSender(SenderBase):
         self.http = urllib3.PoolManager()
 
     def _send(self, data):
-        data["user"] = self.user_name
+        data["data"]["user"] = self.user_name
         assert (
             len(self.user_token) == 32
         ), f"Length of user_token must be 32 for md5 hashing. len(self.user_token) = {len(self.user_token)}"
-
+        url = "/".join([self.host, SEND_LOGS_ENDPOINT])
         r = self.http.request(
             "POST",
-            self.host,
+            url,
             body=json.dumps(data),
             headers={
                 "Content-Type": "application/json",
@@ -83,7 +87,7 @@ class ServerSender(SenderBase):
         elif r.status == 400:
             raise BadRequestError
         else:
-            logger.error("HTTP status " + r.status)
+            logger.error("HTTP status " + str(r.status))
             return False
 
 
