@@ -71,7 +71,7 @@ class ServerSender(SenderBase):
         self.http = urllib3.PoolManager()
 
     def _send(self, data):
-        data["user"] = self.user_name
+        data["data"]["user"] = self.user_name
         assert (
                 len(self.user_token) == 32
         ), f"Length of user_token must be 32 for md5 hashing." \

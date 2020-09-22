@@ -11,9 +11,8 @@ LoggerBotLogging
     pip install -r requirements.txt
     pip install -e .
 
-    export LOGGER_TOKEN=<LOGGER_TOKEN>
+    export LOGGER_TOKEN==($(md5 -q -s {$user_bot_logging}{$password_bot_logging}))
     
-    LOGGER_TOKEN=md5 -s $user$password
 
 len(LOGGER_TOKEN) должна быть равна 32
  
