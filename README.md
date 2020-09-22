@@ -23,13 +23,10 @@ len(LOGGER_TOKEN) должна быть равна 32
     import os
     from bot_logging import RemoteLogger
     
-    def main():
-        os.environ["LOGGER_TOKEN"] = 'a5amka921jkmakguasl1kna9u6sl1241'
-        logger = RemoteLogger('log1', 'denis', 'http://localhost:5000')
-    
-        logger.error("Hello World")
-    
-    main()
+    logger = RemoteLogger('log1', 'denis', 'http://localhost:5000')
+    logger.error("Hello World")
+    logger.stop()
+
     
  Структура
  ------------

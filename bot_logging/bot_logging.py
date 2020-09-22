@@ -60,3 +60,9 @@ class RemoteLogger(Logger):
         )
 
         self.addHandler(self._handler)
+
+    def stop(self):
+        """
+        Please stop logger at the end
+        """
+        self._handler.consumer.del_producer()

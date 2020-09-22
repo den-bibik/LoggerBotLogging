@@ -148,6 +148,13 @@ class ConsumerThread(Thread, metaclass=Singleton):
         self.mutex_producer_number.release()
         return last_producer
 
+    def del_all_producers(self):
+        self.mutex_producer_number.acquire()
+        self._producer_number = 0
+        last_producer = True
+        self.mutex_producer_number.release()
+        return last_producer
+
     def run(self):
         global QUEUE
         previous_iter_empty_queue = True
