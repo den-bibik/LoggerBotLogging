@@ -15,7 +15,8 @@ DEFAULT_MAX_TIME_TO_UPDATE = 5.0
 
 class RemoteLogger(Logger):
     """
-    Use this class instead Logger to send your logs to server
+    Посылает логи на сервер. Подробнее как именно это происходит описано в readme.md
+    (!) По завершении программы необходимо вызвать метод stop().
     """
 
     def __init__(
@@ -40,6 +41,7 @@ class RemoteLogger(Logger):
         :param min_batch: sending params
         :param max_history_len: max size for query
         :param max_tim_to_update: send batch with size less then min_batch
+                after max_tim_to_update seconds
         :param kwargs:
         """
         if sender is None:
