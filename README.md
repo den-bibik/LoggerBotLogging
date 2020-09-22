@@ -19,7 +19,6 @@ len(LOGGER_TOKEN) должна быть равна 32
 Пример
 ------------
 
-    import os
     from bot_logging import RemoteLogger
     
     logger = RemoteLogger('log1', 'denis', 'http://localhost:5000')
@@ -46,7 +45,7 @@ python3 -m pydoc -p port bot_logging
 ```
 source venv/bin/activate
 export PYTHONPATH=`pwd`
-python -m unittest bot_logging/tests/test_logger.py 
+python3 -m unittest bot_logging/tests/test_logger.py 
 ```
 ### Pylint
 ```
